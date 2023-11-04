@@ -7,7 +7,10 @@ require('dotenv').config()
 const port = process.env.PORT || 5000
 
 
-app.use(cors())
+app.use(cors({
+  origin: ["http://localhost:5173"],
+  credentials: true
+}))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -33,7 +36,18 @@ async function run() {
   try {
    
 
-
+  app.post("/api/v1/jwt", async(req, res) => {
+    const email = req.body
+    console.log(email)
+    const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {expiresIn:'1h'})
+    res
+    .cookie('token',token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+    })
+    .send({message: "success"})
+  })
 
 
 
