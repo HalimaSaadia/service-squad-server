@@ -36,6 +36,7 @@ async function run() {
   try {
    
 
+    // jwt
   app.post("/api/v1/jwt", async(req, res) => {
     const email = req.body
     console.log(email)
@@ -49,6 +50,16 @@ async function run() {
     .send({message: "success"})
   })
 
+  app.post("/api/v1/logout", async(req, res)=> {
+    const email = req.body;
+    res
+    .clearCookie("token", {
+      maxAge: 0,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+    })
+    .send({message: "logged Out"})
+  })
 
 
 
