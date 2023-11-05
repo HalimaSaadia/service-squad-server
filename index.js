@@ -41,6 +41,13 @@ async function run() {
       const result = await servicesCollection.insertOne(service)
       res.send(result)
     })
+
+    app.get("/api/vi/services", async(req,res)=> {
+      let query = {};
+      const result = await servicesCollection.find(query).toArray()
+      res.send(result)
+
+    })
    
 
     // jwt
