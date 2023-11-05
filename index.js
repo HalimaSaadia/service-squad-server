@@ -34,6 +34,13 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const servicesCollection = client.db("serviceSquadDB").collection("services");
+
+    app.post("/api/vi/add-service", async(req,res)=> {
+      const service = req.body
+      const result = await servicesCollection.insertOne(service)
+      res.send(result)
+    })
    
 
     // jwt
