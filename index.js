@@ -99,7 +99,7 @@ async function run() {
 
     app.get("/api/v1/user-services", async (req, res) => {
       const query = {
-        email: req.query.email,
+        email: req.query.email
       };
       const result = await servicesCollection.find(query).toArray();
       res.send(result);
@@ -135,6 +135,13 @@ async function run() {
       const result = await servicesCollection.updateOne(filter, updateService)
       res.send(result)
     });
+
+    app.delete("/api/v1/delete-service/:id", async(req, res)=> {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await servicesCollection.deleteOne(query)
+      res.send(result)
+    })
 
     app.post("/api/v1/add-booking", async (req, res) => {
       const bookedService = req.body;
