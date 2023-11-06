@@ -35,6 +35,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const servicesCollection = client.db("serviceSquadDB").collection("services");
+    const bookingCollection = client.db("serviceSquadDB").collection("bookings");
 
   
    
@@ -101,6 +102,14 @@ async function run() {
        const result = await servicesCollection.find(query).toArray()
        res.send(result)
     })
+
+    app.post("/api/v1/add-booking", async(req, res) => {
+      const bookedService = req.body
+      const result = await bookingCollection.insertOne(bookedService)
+      res.send(result)
+    })
+
+   
 
 
 
