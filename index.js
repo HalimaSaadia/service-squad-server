@@ -94,6 +94,14 @@ async function run() {
       res.send(result)
     })
 
+    app.get("/api/v1/user-services", async(req, res)=> {
+      const query = {
+        email: req.query.email
+      }
+       const result = await servicesCollection.find(query).toArray()
+       res.send(result)
+    })
+
 
 
     // Send a ping to confirm a successful connection
