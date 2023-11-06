@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 })
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3azmgms.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,18 +36,7 @@ async function run() {
   try {
     const servicesCollection = client.db("serviceSquadDB").collection("services");
 
-    app.post("/api/vi/add-service", async(req,res)=> {
-      const service = req.body
-      const result = await servicesCollection.insertOne(service)
-      res.send(result)
-    })
-
-    app.get("/api/vi/services", async(req,res)=> {
-      let query = {};
-      const result = await servicesCollection.find(query).toArray()
-      res.send(result)
-
-    })
+  
    
 
     // jwt
@@ -74,6 +63,36 @@ async function run() {
     })
     .send({message: "logged Out"})
   })
+
+    app.post("/api/vi/add-service", async(req,res)=> {
+      const service = req.body
+      const result = await servicesCollection.insertOne(service)
+      res.send(result)
+    })
+
+    app.get("/api/vi/services", async(req,res)=> {
+      let query = {};
+      if(req?.query?.name){
+        query = {
+          serviceName: {
+            $regex: req.query.name,
+            $options: 'i'
+          }
+        }
+      }
+      const result = await servicesCollection.find(query).toArray()
+      res.send(result)
+
+    })
+
+    app.get("/api/v1/service/:id", async(req, res)=> {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id)
+      }
+      const result = await servicesCollection.findOne(query)
+      res.send(result)
+    })
 
 
 
