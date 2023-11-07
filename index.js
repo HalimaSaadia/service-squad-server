@@ -37,14 +37,19 @@ async function run() {
     const servicesCollection = client
       .db("serviceSquadDB")
       .collection("services");
+
     const bookingCollection = client
       .db("serviceSquadDB")
       .collection("bookings");
 
+      const faqCollection = client
+      .db("serviceSquadDB")
+      .collection("faq");
+
+
     // jwt
     app.post("/api/v1/jwt", async (req, res) => {
       const email = req.body;
-      console.log(email);
       const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1h",
       });
@@ -168,7 +173,6 @@ async function run() {
     app.patch("/api/v1/update-status/:id", async(req, res) => {
       const id = req.params.id;
       const newStatus = req.body.newStatus;
-      console.log(newStatus)
       const filter = {
         _id: new ObjectId(id)
       }
@@ -179,6 +183,11 @@ async function run() {
       }
       const result = await bookingCollection.updateOne(filter, updatedStatus, { upsert: true })
       res.send(result)
+    })
+
+    app.get("/api/v1/faq", async(req, res) => {
+      const faq = await faqCollection.find().toArray()
+      res.send(faq)
     })
    
 
