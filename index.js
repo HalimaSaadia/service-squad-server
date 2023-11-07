@@ -143,15 +143,18 @@ async function run() {
       res.send(result)
     })
 
-    app.get("/api/v1/bookings", async(req, res)=> {
-      const query = req.query.email
-      const bookings = await bookingCollection.find().toArray()
+   
+
+    app.get("/api/v1/user-bookings", async(req, res)=> {
+      const email = req.query.email
+      const query = {userEmail: email}
+      const bookings = await bookingCollection.find(query).toArray()
       res.send(bookings)
     })
 
-    app.get("/api/v1/my-bookings", async(req, res)=> {
+    app.get("/api/v1/user-pendingWorks", async(req, res)=> {
       const email = req.query.email
-      const query = {userEmail: email}
+      const query = {providerEmail: email}
       const bookings = await bookingCollection.find(query).toArray()
       res.send(bookings)
     })
