@@ -145,7 +145,13 @@ async function run() {
 
    
 
-    app.get("/api/v1/user-bookings", async(req, res)=> {
+    app.post("/api/v1/add-booking", async (req, res) => {
+      const bookedService = req.body;
+      const result = await bookingCollection.insertOne(bookedService);
+      res.send(result);
+    });
+
+       app.get("/api/v1/user-bookings", async(req, res)=> {
       const email = req.query.email
       const query = {userEmail: email}
       const bookings = await bookingCollection.find(query).toArray()
@@ -159,11 +165,22 @@ async function run() {
       res.send(bookings)
     })
 
-    app.post("/api/v1/add-booking", async (req, res) => {
-      const bookedService = req.body;
-      const result = await bookingCollection.insertOne(bookedService);
-      res.send(result);
-    });
+    app.patch("/api/v1/update-status/:id", async(req, res) => {
+      const id = req.params.id;
+      const newStatus = req.body.newStatus;
+      console.log(newStatus)
+      const filter = {
+        _id: new ObjectId(id)
+      }
+      const updatedStatus = {
+        $set: {
+          status: newStatus
+        }
+      }
+      const result = await bookingCollection.updateOne(filter, updatedStatus, { upsert: true })
+      res.send(result)
+    })
+   
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
