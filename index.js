@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://assignment11-e566e.web.app", "https://assignment11-e566e.firebaseapp.com"],
     credentials: true,
   })
 );
@@ -32,6 +32,20 @@ const client = new MongoClient(uri, {
   },
 });
 
+const tokenVerification = (req, res, next) => {
+  const token = req?.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 async function run() {
   try {
     const servicesCollection = client
@@ -42,10 +56,7 @@ async function run() {
       .db("serviceSquadDB")
       .collection("bookings");
 
-      const faqCollection = client
-      .db("serviceSquadDB")
-      .collection("faq");
-
+    const faqCollection = client.db("serviceSquadDB").collection("faq");
 
     // jwt
     app.post("/api/v1/jwt", async (req, res) => {
@@ -73,7 +84,7 @@ async function run() {
         .send({ message: "logged Out" });
     });
 
-    app.post("/api/vi/add-service", async (req, res) => {
+    app.post("/api/vi/add-service",tokenVerification, async (req, res) => {
       const service = req.body;
       const result = await servicesCollection.insertOne(service);
       res.send(result);
@@ -93,24 +104,37 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/api/v1/service/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = {
-        _id: new ObjectId(id),
-      };
-      const result = await servicesCollection.findOne(query);
-      res.send(result);
+    app.get("/api/v1/service/:id", tokenVerification,  async (req, res) => {
+      // const userEmail = req?.user?.email;
+      // const loggedInUser = req.query.email;
+
+      // if (userEmail !== loggedInUser) {
+      //   return res.send({ message: "forbidden Access" })
+      // }
+    
+        const id = req.params.id;
+        const query = {
+          _id: new ObjectId(id),
+        };
+        const result = await servicesCollection.findOne(query);
+        res.send(result);
+  
+      // console.log("user", userEmail);
+      // console.log("loggedIn",loggedInUser);
     });
 
-    app.get("/api/v1/user-services", async (req, res) => {
+    app.get("/api/v1/user-services", tokenVerification, async (req, res) => {
+      if(req.user.email !== req.query.email){
+        return res.send({message: "Forbidden Access"})
+      }
       const query = {
-        email: req.query.email
+        email: req.query.email,
       };
       const result = await servicesCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.put("/api/vi/update-service/:id", async (req, res) => {
+    app.put("/api/vi/update-service/:id",tokenVerification,  async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const {
@@ -122,7 +146,7 @@ async function run() {
         price,
         serviceArea,
         description,
-      } = req.body
+      } = req.body;
 
       const updateService = {
         $set: {
@@ -133,63 +157,68 @@ async function run() {
           email,
           price,
           serviceArea,
-          description
-        }
+          description,
+        },
       };
 
-      const result = await servicesCollection.updateOne(filter, updateService)
-      res.send(result)
+      const result = await servicesCollection.updateOne(filter, updateService);
+      res.send(result);
     });
 
-    app.delete("/api/v1/delete-service/:id", async(req, res)=> {
+    app.delete("/api/v1/delete-service/:id",tokenVerification,  async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await servicesCollection.deleteOne(query)
-      res.send(result)
-    })
+      const query = { _id: new ObjectId(id) };
+      const result = await servicesCollection.deleteOne(query);
+      res.send(result);
+    });
 
-   
-
-    app.post("/api/v1/add-booking", async (req, res) => {
+    app.post("/api/v1/add-booking", tokenVerification, async (req, res) => {
       const bookedService = req.body;
       const result = await bookingCollection.insertOne(bookedService);
       res.send(result);
     });
 
-       app.get("/api/v1/user-bookings", async(req, res)=> {
-      const email = req.query.email
-      const query = {userEmail: email}
-      const bookings = await bookingCollection.find(query).toArray()
-      res.send(bookings)
-    })
+    app.get("/api/v1/user-bookings",tokenVerification,  async (req, res) => {
+      if(req.user.email !== req.query.email){
+        return res.send({message: "Forbidden Access"})
+      }
+      const email = req.query.email;
+      const query = { userEmail: email };
+      const bookings = await bookingCollection.find(query).toArray();
+      res.send(bookings);
+    });
 
-    app.get("/api/v1/user-pendingWorks", async(req, res)=> {
-      const email = req.query.email
-      const query = {providerEmail: email}
-      const bookings = await bookingCollection.find(query).toArray()
-      res.send(bookings)
-    })
+    app.get("/api/v1/user-pendingWorks",tokenVerification,  async (req, res) => {
+      if(req.user.email !== req.query.email){
+        return res.send({message: "Forbidden Access"})
+      }
+      const email = req.query.email;
+      const query = { providerEmail: email };
+      const bookings = await bookingCollection.find(query).toArray();
+      res.send(bookings);
+    });
 
-    app.patch("/api/v1/update-status/:id", async(req, res) => {
+    app.patch("/api/v1/update-status/:id",tokenVerification,  async (req, res) => {
       const id = req.params.id;
       const newStatus = req.body.newStatus;
       const filter = {
-        _id: new ObjectId(id)
-      }
+        _id: new ObjectId(id),
+      };
       const updatedStatus = {
         $set: {
-          status: newStatus
-        }
-      }
-      const result = await bookingCollection.updateOne(filter, updatedStatus, { upsert: true })
-      res.send(result)
-    })
+          status: newStatus,
+        },
+      };
+      const result = await bookingCollection.updateOne(filter, updatedStatus, {
+        upsert: true,
+      });
+      res.send(result);
+    });
 
-    app.get("/api/v1/faq", async(req, res) => {
-      const faq = await faqCollection.find().toArray()
-      res.send(faq)
-    })
-   
+    app.get("/api/v1/faq", async (req, res) => {
+      const faq = await faqCollection.find().toArray();
+      res.send(faq);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
