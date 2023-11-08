@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://assignment11-e566e.web.app", "https://assignment11-e566e.firebaseapp.com"],
+    origin: ["https://assignment11-e566e.web.app", "https://assignment11-e566e.firebaseapp.com"],
     credentials: true,
   })
 );
@@ -105,13 +105,6 @@ async function run() {
     });
 
     app.get("/api/v1/service/:id", tokenVerification,  async (req, res) => {
-      // const userEmail = req?.user?.email;
-      // const loggedInUser = req.query.email;
-
-      // if (userEmail !== loggedInUser) {
-      //   return res.send({ message: "forbidden Access" })
-      // }
-    
         const id = req.params.id;
         const query = {
           _id: new ObjectId(id),
@@ -119,8 +112,6 @@ async function run() {
         const result = await servicesCollection.findOne(query);
         res.send(result);
   
-      // console.log("user", userEmail);
-      // console.log("loggedIn",loggedInUser);
     });
 
     app.get("/api/v1/user-services", tokenVerification, async (req, res) => {
